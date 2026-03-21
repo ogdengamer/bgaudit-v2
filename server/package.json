@@ -1,0 +1,18 @@
+{
+  "name": "bgaudit-server",
+  "version": "1.0.0",
+  "description": "Boardgame shelf audit server",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "redis": "^4.7.1",
+    "uuid": "^9.0.1"
+  }
+}
