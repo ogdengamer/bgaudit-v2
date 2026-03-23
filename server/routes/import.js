@@ -9,7 +9,7 @@ function normalizeGame(g) {
   return {
     id: String(g.id ?? g.objectid ?? crypto.randomUUID()),
     name: String(g.name ?? g.objectname ?? '').trim(),
-    location: String(g.location ?? g.invlocation ?? '').trim(),
+    location: String(g.location ?? g.invlocation ?? '').trim().toUpperCase(),
     origin: 'bgg',
     found: false
   };

@@ -329,15 +329,14 @@ async function addNewGame() {
 
 // ── QR Code ───────────────────────────────────────────────────────────────────
 function renderQR() {
-  const url    = `${window.location.origin}/s/${state.sessionId}`;
-  const canvas = document.getElementById('qr-canvas');
-  const urlEl  = document.getElementById('qr-url');
+  const url         = `${window.location.origin}/s/${state.sessionId}`;
+  const qrContainer = document.getElementById('qr-canvas');
+  const urlEl       = document.getElementById('qr-url');
 
-  urlEl.textContent = url;
+  urlEl.textContent  = url;
+  qrContainer.innerHTML = '';
 
-  // Clear previous QR and draw a new one
-  canvas.innerHTML = '';
-  new QRCode(canvas, {
+  new QRCode(qrContainer, {
     text: url,
     width: 160,
     height: 160,

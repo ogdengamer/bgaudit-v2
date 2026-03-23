@@ -64,7 +64,7 @@ async function parseCollection(xml) {
   return itemArray.map(item => ({
     id: item.$.objectid,
     name: item.name?._ ?? item.name ?? '',
-    location: item.privateinfo?.$?.invlocation ?? ''
+    location: (item.privateinfo?.$?.inventorylocation ?? '').toUpperCase()
   }));
 }
 
