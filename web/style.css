@@ -1,0 +1,245 @@
+/* ── Variables & Reset ────────────────────────────────── */
+:root {
+  --gap: 12px;
+  --radius: 12px;
+  --bg: #0b0b0c;
+  --surface: #141417;
+  --border: #242429;
+  --text: #e8e8ea;
+  --text-dim: #888;
+  --accent: #2d6cdf;
+  --danger: #7a1c1c;
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── Layout ───────────────────────────────────────────── */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--gap);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+}
+
+.row.between { justify-content: space-between; }
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--gap);
+}
+
+.grid3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--gap);
+}
+
+@media (min-width: 900px) {
+  .grid2 { grid-template-columns: 1.5fr 1fr; }
+  .grid3 { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ── Components ───────────────────────────────────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  padding: var(--gap) 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--gap);
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.card h3 { margin-bottom: var(--gap); }
+
+/* ── Buttons ──────────────────────────────────────────── */
+button, .btn {
+  cursor: pointer;
+  border-radius: 10px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  background: #1a1a1f;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+
+button:hover, .btn:hover { opacity: 0.85; }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-primary { background: var(--accent); border-color: var(--accent); }
+.btn-danger  { background: var(--danger); border-color: var(--danger); }
+.btn-active  { outline: 2px solid var(--accent); }
+
+/* ── Inputs ───────────────────────────────────────────── */
+input {
+  background: #0f0f12;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-family: inherit;
+  width: 100%;
+}
+
+input:focus {
+  outline: 2px solid var(--accent);
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+/* ── Tabs ─────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 8px;
+}
+
+/* ── Game List ────────────────────────────────────────── */
+.list {
+  list-style: none;
+  max-height: 55vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: var(--gap);
+}
+
+.game-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s;
+  gap: var(--gap);
+}
+
+.game-item:hover { background: #1e1e24; }
+.game-item.is-found { opacity: 0.5; }
+
+.game-name { text-align: left; flex: 1; }
+.game-location { font-size: 0.8rem; color: var(--text-dim); }
+
+/* ── Location Chips ───────────────────────────────────── */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: var(--gap);
+}
+
+.chip {
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  background: #1a1a1f;
+  color: var(--text);
+  transition: all 0.15s;
+}
+
+.chip.selected {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ── QR Code ──────────────────────────────────────────── */
+.qr-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.qr-box canvas {
+  border-radius: 8px;
+}
+
+.qr-url {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  word-break: break-all;
+  text-align: center;
+}
+
+/* ── Report counts ────────────────────────────────────── */
+.counts {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.count-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.count-number {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.count-label {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+/* ── Screens (shown/hidden by app.js) ────────────────── */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ── Utility ──────────────────────────────────────────── */
+.hidden { display: none !important; }
+.dimmed { opacity: 0.5; }
+.mt { margin-top: var(--gap); }
+
+small { color: var(--text-dim); font-size: 0.85rem; }
+h2 { font-size: 1.4rem; }
+h3 { font-size: 1.1rem; }
