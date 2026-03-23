@@ -35,4 +35,4 @@ app.get('*', (req, res) => {
 });
 
 const port = Number(process.env.PORT || 4000);
-app.listen(port, () => console.log(`BGAudit server running at http://localhost:${port}`));
+app.listen(port, '0.0.0.0',() => console.log(`BGAudit server running at http://0.0.0.0:${port}`));
