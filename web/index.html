@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BGG Shelf Audit</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+
+    <header class="topbar">
+      <a href="/" class="brand">🎲 BGG Shelf Audit</a>
+      <span id="header-status"></span>
+    </header>
+
+    <!-- ── Setup Screen ─────────────────────────────────── -->
+    <div id="screen-setup" class="screen">
+      <div class="stack">
+        <h2>Setup</h2>
+
+        <div class="tabs">
+          <button id="tab-bgg" class="btn-active" onclick="setTab('bgg')">BoardGameGeek</button>
+          <button id="tab-csv" onclick="setTab('csv')">CSV</button>
+        </div>
+
+        <!-- BGG import panel -->
+        <div id="panel-bgg" class="card stack">
+          <p>Sign in with your BGG account to load your collection directly.</p>
+          <label>BGG Username
+            <input id="bgg-username" type="text" placeholder="your BGG username" autocomplete="username" />
+          </label>
+          <label>BGG Password
+            <input id="bgg-password" type="password" placeholder="your BGG password" autocomplete="current-password" />
+          </label>
+          <div>
+            <button id="btn-bgg-import" class="btn-primary" onclick="importFromBGG()">Load my collection</button>
+          </div>
+          <small>Your password is sent directly to BGG to authenticate. It is never stored.</small>
+        </div>
+
+        <!-- CSV import panel -->
+        <div id="panel-csv" class="card stack hidden">
+          <p>Export your collection from BGG as a CSV and upload it here.</p>
+          <p><small>Go to <strong>boardgamegeek.com</strong> → Collection → Export → CSV</small></p>
+          <input id="csv-file" type="file" accept=".csv" onchange="handleCSVUpload(event)" />
+        </div>
+
+        <!-- Location picker (shown after import) -->
+        <div id="panel-locations" class="card stack hidden">
+          <h3>Choose locations to audit</h3>
+          <div id="location-chips" class="chips"></div>
+          <div>
+            <button id="btn-start" class="btn-primary" onclick="startAudit()" disabled>
+              Start Audit
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Audit Screen ──────────────────────────────────── -->
+    <div id="screen-audit" class="screen">
+      <div class="stack">
+
+        <div class="row between">
+          <h2>Audit</h2>
+          <div class="row">
+            <button onclick="showReport()">Report</button>
+            <button onclick="showSetup()">← Setup</button>
+          </div>
+        </div>
+
+        <!-- Add new game form -->
+        <div class="card stack">
+          <h3>Found a game not in BGG?</h3>
+          <div class="row">
+            <input id="new-game-name" type="text" placeholder="Game name" />
+            <input id="new-game-location" type="text" placeholder="Location (e.g. SHELF)" />
+            <button onclick="addNewGame()">Add & mark found</button>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <!-- Pending games -->
+          <div class="card stack">
+            <div class="row between">
+              <h3>Pending</h3>
+              <span id="count-pending" class="dimmed"></span>
+            </div>
+            <ul id="list-pending" class="list"></ul>
+          </div>
+
+          <!-- Found games -->
+          <div class="card stack">
+            <div class="row between">
+              <h3>Found</h3>
+              <span id="count-found" class="dimmed"></span>
+            </div>
+            <ul id="list-found" class="list"></ul>
+          </div>
+        </div>
+
+        <!-- Sidebar info -->
+        <div class="grid2">
+          <div class="card stack">
+            <h3>Continue on another device</h3>
+            <div class="qr-box">
+              <canvas id="qr-canvas"></canvas>
+              <div id="qr-url" class="qr-url"></div>
+            </div>
+          </div>
+
+          <div class="card stack">
+            <h3>Session</h3>
+            <div><small>ID: <span id="session-id"></span></small></div>
+            <div><small>Locations: <span id="session-locations"></span></small></div>
+            <div class="mt">
+              <button class="btn-danger" onclick="deleteSession()">Delete session</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Report Screen ─────────────────────────────────── -->
+    <div id="screen-report" class="screen">
+      <div class="stack">
+
+        <div class="row between">
+          <h2>Audit Report</h2>
+          <button onclick="showAudit()">← Back to audit</button>
+        </div>
+
+        <div class="card">
+          <div class="counts">
+            <div class="count-item">
+              <span id="rpt-all" class="count-number">–</span>
+              <span class="count-label">Total</span>
+            </div>
+            <div class="count-item">
+              <span id="rpt-found" class="count-number">–</span>
+              <span class="count-label">Found</span>
+            </div>
+            <div class="count-item">
+              <span id="rpt-missing" class="count-number">–</span>
+              <span class="count-label">Missing</span>
+            </div>
+            <div class="count-item">
+              <span id="rpt-new" class="count-number">–</span>
+              <span class="count-label">New</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid3">
+          <div class="card stack">
+            <h3>✅ Found</h3>
+            <button onclick="copyCSV('found')">Copy as CSV</button>
+            <ul id="rpt-list-found" class="list"></ul>
+          </div>
+          <div class="card stack">
+            <h3>❌ Missing</h3>
+            <button onclick="copyCSV('missing')">Copy as CSV</button>
+            <ul id="rpt-list-missing" class="list"></ul>
+          </div>
+          <div class="card stack">
+            <h3>🆕 New</h3>
+            <button onclick="copyCSV('new')">Copy as CSV</button>
+            <ul id="rpt-list-new" class="list"></ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /container -->
+
+  <!-- QR code library (loaded from CDN, no build step needed) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
