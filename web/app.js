@@ -264,7 +264,7 @@ function renderAudit() {
       : true;
 
   const scoped = state.games.filter(inScope);
-  const pending = scoped.filter(g => !g.found && g.origin !== 'new').sort((a, b) => a.name.localeCompare(b.name));
+  const pending = scoped.filter(g => !g.found).sort((a, b) => a.name.localeCompare(b.name));
   const found   = scoped.filter(g => g.found).sort((a, b) => a.name.localeCompare(b.name));
 
   document.getElementById('count-pending').textContent = `${pending.length} remaining`;
