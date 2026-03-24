@@ -379,8 +379,64 @@ function copyCSV(section) {
       .map(v => `"${String(v || '').replaceAll('"', '""')}"`)
       .join(',')
   );
-  navigator.clipboard.writeText([header, ...rows].join('\n'));
-  alert(`Copied ${rows.length} games to clipboard.`);
+  const csv = [header, ...rows].join('\n');
+
+  // Try the modern clipboard API first (requires https or localhost)
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(csv)
+      .then(() => alert(`Copied ${rows.length} games to clipboard.`))
+      .catch(() => showCSVFallback(csv));
+  } else {
+    // Fallback for http: select text from a temporary textarea
+    showCSVFallback(csv);
+  }
+}
+
+function showCSVFallback(csv) {
+  // Create overlay
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999;
+  `;
+
+  // Create modal
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    background: #141417; border: 1px solid #242429; border-radius: 12px;
+    padding: 20px; width: 80%; max-width: 600px; display: flex;
+    flex-direction: column; gap: 12px;
+  `;
+
+  const title = document.createElement('p');
+  title.textContent = 'Select all and copy with Ctrl+C (or ⌘+C on Mac):';
+  title.style.margin = '0';
+
+  const ta = document.createElement('textarea');
+  ta.value = csv;
+  ta.style.cssText = `
+    width: 100%; height: 200px; background: #0f0f12; color: #e8e8ea;
+    border: 1px solid #2d6cdf; border-radius: 8px; padding: 10px;
+    font-size: 0.85rem; font-family: monospace; resize: vertical;
+  `;
+
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = 'Done';
+  closeBtn.style.alignSelf = 'flex-end';
+  closeBtn.onclick = () => document.body.removeChild(overlay);
+
+  modal.appendChild(title);
+  modal.appendChild(ta);
+  modal.appendChild(closeBtn);
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  // Select all text after render
+  requestAnimationFrame(() => {
+    ta.focus();
+    ta.select();
+  });
 }
 
 // ── Delete Session ────────────────────────────────────────────────────────────
