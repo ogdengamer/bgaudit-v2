@@ -279,6 +279,9 @@ function renderAudit() {
 
   // QR code for resuming on another device
   renderQR();
+
+  // Default the new game location to the first selected location
+  document.getElementById('new-game-location').value = state.selectedLocations[0] || '';
 }
 
 function renderGameList(listId, games, isFound) {
@@ -311,7 +314,7 @@ async function addNewGame() {
   const nameEl     = document.getElementById('new-game-name');
   const locationEl = document.getElementById('new-game-location');
   const name       = nameEl.value.trim();
-  const location   = locationEl.value.trim();
+  const location   = locationEl.value.trim().toUpperCase();
 
   if (!name) {
     alert('Please enter a game name.');
@@ -402,37 +405,40 @@ function escapeHtml(str) {
 // When the page loads, check the URL to decide which screen to show.
 // This is what makes sharing the URL (and scanning the QR code) work.
 async function route() {
-  const path = window.location.pathname;
+  try {
+    const path = window.location.pathname;
 
-  // Match /s/:id or /s/:id/report
-  const auditMatch  = path.match(/^\/s\/([^/]+)$/);
-  const reportMatch = path.match(/^\/s\/([^/]+)\/report$/);
+    const auditMatch  = path.match(/^\/s\/([^/]+)$/);
+    const reportMatch = path.match(/^\/s\/([^/]+)\/report$/);
 
-  if (auditMatch || reportMatch) {
-    const id = (auditMatch || reportMatch)[1];
-    const sess = await api.getSession(id);
+    if (auditMatch || reportMatch) {
+      const id = (auditMatch || reportMatch)[1];
+      console.log('Routing to session:', id);
+      const sess = await api.getSession(id);
+      console.log('Session response:', JSON.stringify(sess));
 
-    if (!sess || sess.error) {
-      // Session not found or expired — go back to setup
-      showSetup();
+      if (!sess || sess.error) {
+        showSetup();
+        return;
+      }
+
+      state.sessionId         = sess.id;
+      state.games             = sess.games;
+      state.selectedLocations = sess.filters?.locations || [];
+
+      if (reportMatch) {
+        await showReport();
+      } else {
+        showAudit();
+      }
       return;
     }
 
-    // Restore state from the server
-    state.sessionId        = sess.id;
-    state.games            = sess.games;
-    state.selectedLocations = sess.filters?.locations || [];
-
-    if (reportMatch) {
-      await showReport();
-    } else {
-      showAudit();
-    }
-    return;
+    showSetup();
+  } catch (err) {
+    console.error('Routing error:', err);
+    showSetup();
   }
-
-  // Default: show setup screen
-  showSetup();
 }
 
 // Kick everything off when the page loads

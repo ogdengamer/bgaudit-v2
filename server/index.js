@@ -29,8 +29,9 @@ app.use('/api/session', importRoutes);
 app.use('/api/session', auditRoutes);
 app.use('/api/session', reportRoutes);
 
-// For any non-API route, serve index.html so our frontend can handle routing
-app.get('*', (req, res) => {
+// Catch-all: only for navigation routes, NOT for static files
+app.get('*', (req, res, next) => {
+  if (req.path.includes('.')) return next();
   res.sendFile(path.join(__dirname, '../web/index.html'));
 });
 

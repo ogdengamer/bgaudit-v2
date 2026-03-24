@@ -40,7 +40,7 @@ router.post('/:id/addGame', async (req, res) => {
   const newGame = {
     id: `new-${crypto.randomUUID()}`,
     name: String(name || '').trim(),
-    location: String(location || '').trim(),
+    location: String(location || '').trim().toUpperCase(),
     origin: 'new',
     found: true
   };
