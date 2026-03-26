@@ -164,13 +164,12 @@ async function handleCSVUpload(event) {
   renderLocationPicker();
 }
 
-// Parses a BGG CSV export into an array of game objects
+// Parses a BGG CSV export, handling multi-line quoted fields
 function parseCSV(text) {
-  const lines = text.trim().split('\n');
-  if (lines.length < 2) return [];
+  const rows = splitCSVRows(text);
+  if (rows.length < 2) return [];
 
-  // Parse header row to find column positions
-  const headers = splitCSVLine(lines[0]).map(h => h.toLowerCase().trim());
+  const headers = rows[0].map(h => h.toLowerCase().trim());
   const col = (name) => headers.indexOf(name);
 
   const idCol       = col('objectid');
@@ -182,8 +181,7 @@ function parseCSV(text) {
     return [];
   }
 
-  return lines.slice(1)
-    .map(line => splitCSVLine(line))
+  return rows.slice(1)
     .filter(cols => cols.length > 1)
     .map(cols => ({
       objectid:    cols[idCol]?.trim() || '',
@@ -193,30 +191,87 @@ function parseCSV(text) {
     .filter(g => g.objectid && g.objectname);
 }
 
-// Handles quoted fields and commas within fields
-function splitCSVLine(line) {
-  const result = [];
-  let current = '';
+// Splits CSV text into rows of fields, correctly handling:
+// - Quoted fields containing commas
+// - Quoted fields containing newlines
+// - Escaped quotes ("")
+function splitCSVRows(text) {
+  const rows = [];
+  let currentRow = [];
+  let currentField = '';
   let inQuotes = false;
+  let i = 0;
 
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (ch === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        current += '"';
-        i++;
+  while (i < text.length) {
+    const ch = text[i];
+
+    if (inQuotes) {
+      if (ch === '"') {
+        // Check for escaped quote ("")
+        if (text[i + 1] === '"') {
+          currentField += '"';
+          i += 2;
+          continue;
+        } else {
+          // Closing quote
+          inQuotes = false;
+          i++;
+          continue;
+        }
       } else {
-        inQuotes = !inQuotes;
+        // Everything inside quotes is part of the field, including newlines
+        currentField += ch;
+        i++;
+        continue;
       }
-    } else if (ch === ',' && !inQuotes) {
-      result.push(current);
-      current = '';
-    } else {
-      current += ch;
+    }
+
+    // Not in quotes
+    if (ch === '"') {
+      inQuotes = true;
+      i++;
+      continue;
+    }
+
+    if (ch === ',') {
+      currentRow.push(currentField);
+      currentField = '';
+      i++;
+      continue;
+    }
+
+    if (ch === '\n') {
+      // End of row
+      currentRow.push(currentField);
+      currentField = '';
+      // Skip \r if present (Windows line endings)
+      if (currentRow.some(f => f.trim())) {
+        rows.push(currentRow);
+      }
+      currentRow = [];
+      i++;
+      continue;
+    }
+
+    if (ch === '\r') {
+      // Skip carriage returns
+      i++;
+      continue;
+    }
+
+    currentField += ch;
+    i++;
+  }
+
+  // Handle last row if file doesn't end with newline
+  if (currentField || currentRow.length) {
+    currentRow.push(currentField);
+    if (currentRow.some(f => f.trim())) {
+      rows.push(currentRow);
     }
   }
-  result.push(current);
-  return result;
+
+  return rows;
 }
 
 // ── Location Picker ───────────────────────────────────────────────────────────
