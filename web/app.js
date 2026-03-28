@@ -468,6 +468,11 @@ function renderReportList(listId, games) {
   });
 }
 
+function downloadFullCSV() {
+  // Trigger a direct download by navigating to the CSV endpoint
+  window.location.href = `/api/session/${state.sessionId}/report/csv`;
+}
+
 function copyCSV(section) {
   if (!state.reportData) return;
   const games  = state.reportData[section] || [];
