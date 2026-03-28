@@ -6,7 +6,8 @@ const state = {
   locations: [],
   selectedLocations: [],
   games: [],
-  reportData: null
+  reportData: null,
+  lastAction: null
 };
 
 // ── API ───────────────────────────────────────────────────────────────────────
@@ -318,25 +319,44 @@ function renderAudit() {
       ? state.selectedLocations.includes(g.location)
       : true;
 
+  // Strip leading articles for sorting purposes
+  const sortKey = (name) => name.replace(/^(the|a|an)\s+/i, '').toLowerCase();
+
   const scoped = state.games.filter(inScope);
-  const pending = scoped.filter(g => !g.found).sort((a, b) => a.name.localeCompare(b.name));
-  const found   = scoped.filter(g => g.found).sort((a, b) => a.name.localeCompare(b.name));
+  const pending = scoped.filter(g => !g.found).sort((a, b) => sortKey(a.name).localeCompare(sortKey(b.name)));
+  const found   = scoped.filter(g => g.found).sort((a, b) => sortKey(a.name).localeCompare(sortKey(b.name)));
 
-  document.getElementById('count-pending').textContent = `${pending.length} remaining`;
-  document.getElementById('count-found').textContent   = `${found.length} found`;
+  // Apply search filter to pending list only
+  const searchTerm = document.getElementById('search-input')?.value?.toLowerCase() || '';
+  const filteredPending = searchTerm
+    ? pending.filter(g => g.name.toLowerCase().includes(searchTerm))
+    : pending;
 
-  renderGameList('list-pending', pending, false);
+  document.getElementById('count-pending').textContent = searchTerm
+    ? `${filteredPending.length} of ${pending.length} remaining`
+    : `${pending.length} remaining`;
+  document.getElementById('count-found').textContent = `${found.length} found`;
+
+  renderGameList('list-pending', filteredPending, false);
   renderGameList('list-found', found, true);
+
+  // Undo button — only show if there's something to undo
+  const undoBtn = document.getElementById('btn-undo');
+  if (undoBtn) {
+    if (state.lastAction) {
+      const game = state.games.find(g => g.id === state.lastAction.gameId);
+      undoBtn.classList.remove('hidden');
+      undoBtn.textContent = `Undo: ${game ? game.name : 'last action'}`;
+    } else {
+      undoBtn.classList.add('hidden');
+    }
+  }
 
   // Session info sidebar
   document.getElementById('session-id').textContent        = state.sessionId;
   document.getElementById('session-locations').textContent = state.selectedLocations.join(', ') || 'All';
 
-  // QR code for resuming on another device
   renderQR();
-
-  // Default the new game location to the first selected location
-  document.getElementById('new-game-location').value = state.selectedLocations[0] || '';
 }
 
 function renderGameList(listId, games, isFound) {
@@ -356,12 +376,35 @@ function renderGameList(listId, games, isFound) {
 }
 
 async function toggleGame(gameId) {
-  await api.toggleFound(state.sessionId, gameId);
-
-  // Update local state so re-render is instant
   const game = state.games.find(g => g.id === gameId);
-  if (game) game.found = !game.found;
+  if (!game) return;
 
+  // Store undo info before changing anything
+  state.lastAction = { type: 'toggle', gameId, previousFound: game.found };
+
+  await api.toggleFound(state.sessionId, gameId);
+  game.found = !game.found;
+
+  renderAudit();
+}
+
+async function undoLastAction() {
+  if (!state.lastAction) return;
+
+  const { type, gameId, previousFound } = state.lastAction;
+
+  if (type === 'toggle') {
+    const game = state.games.find(g => g.id === gameId);
+    if (!game) return;
+
+    // Only undo if state has changed from what it was
+    if (game.found !== previousFound) {
+      await api.toggleFound(state.sessionId, gameId);
+      game.found = previousFound;
+    }
+  }
+
+  state.lastAction = null;
   renderAudit();
 }
 

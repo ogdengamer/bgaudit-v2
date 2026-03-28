@@ -62,7 +62,7 @@ async function parseCollection(xml) {
   const itemArray = Array.isArray(items) ? items : [items];
 
   return itemArray.map(item => ({
-    id: item.$.objectid,
+    id: item.$.collid,
     name: item.name?._ ?? item.name ?? '',
     location: (item.privateinfo?.$?.inventorylocation ?? '').toUpperCase()
   }));

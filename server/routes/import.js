@@ -7,7 +7,7 @@ const router = Router({ mergeParams: true });
 // Helper to normalize any game object into our standard shape
 function normalizeGame(g) {
   return {
-    id: String(g.id ?? g.objectid ?? crypto.randomUUID()),
+    id: String(g.collid ?? g.id ?? g.objectid ?? crypto.randomUUID()),
     name: String(g.name ?? g.objectname ?? '').trim(),
     location: String(g.location ?? g.invlocation ?? '').trim().toUpperCase(),
     origin: 'bgg',

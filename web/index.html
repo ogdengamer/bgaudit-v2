@@ -89,6 +89,13 @@
               <h3>Pending</h3>
               <span id="count-pending" class="dimmed"></span>
             </div>
+            <input
+              id="search-input"
+              type="search"
+              placeholder="Search games…"
+              oninput="renderAudit()"
+            />
+            <button id="btn-undo" class="btn-danger hidden" onclick="undoLastAction()"></button>
             <ul id="list-pending" class="list"></ul>
           </div>
 
