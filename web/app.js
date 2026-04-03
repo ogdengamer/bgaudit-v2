@@ -419,11 +419,36 @@ async function addNewGame() {
     return;
   }
 
+  // Fuzzy duplicate check — look for existing games where either name
+  // contains the other, case-insensitive, at a different location
+  const nameLower = name.toLowerCase();
+  const matches = state.games.filter(g => {
+    if (g.origin === 'new') return false; // ignore previously added new games
+    const gLower = g.name.toLowerCase();
+    return (gLower.includes(nameLower) || nameLower.includes(gLower))
+      && g.location !== location;
+  });
+
+  if (matches.length > 0) {
+    const matchList = matches
+      .map(g => `• "${g.name}" — ${g.location}`)
+      .join('\n');
+
+    const proceed = confirm(
+      `⚠️ Similar game(s) already exist in your collection at a different location:\n\n` +
+      `${matchList}\n\n` +
+      `Did you move this game to the shelf without updating BGG?\n\n` +
+      `Click OK to add it anyway, or Cancel to go back.`
+    );
+
+    if (!proceed) return;
+  }
+
   const result = await api.addGame(state.sessionId, name, location);
   state.games.push(result.game);
 
   nameEl.value     = '';
-  locationEl.value = '';
+  locationEl.value = state.selectedLocations[0] || '';
 
   renderAudit();
 }
