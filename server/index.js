@@ -17,7 +17,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Serve the web/ folder as static files
-app.use(express.static(path.join(__dirname, '../web')));
+const webPath = process.env.WEB_PATH || path.join(__dirname, '../web');
+app.use(express.static(webPath));
 
 app.use(express.json({ limit: '5mb' }));
 app.use(cors());
@@ -32,7 +33,7 @@ app.use('/api/session', reportRoutes);
 // Catch-all: only for navigation routes, NOT for static files
 app.get('*', (req, res, next) => {
   if (req.path.includes('.')) return next();
-  res.sendFile(path.join(__dirname, '../web/index.html'));
+  res.sendFile(path.join(webPath, 'index.html'));
 });
 
 const port = Number(process.env.PORT || 4000);
