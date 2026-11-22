@@ -1,0 +1,12 @@
+# Dev override: live-reload the server and serve web/ straight from the repo.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+services:
+  app:
+    command: ["node", "--watch", "index.js"]
+    environment:
+      - PUBLIC_BASE_URL=http://localhost:4000
+    volumes:
+      - ./server:/app
+      - ./web:/app/web
+      # keep the image's installed node_modules instead of the (empty) host folder
+      - /app/node_modules
