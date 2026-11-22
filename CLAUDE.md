@@ -10,6 +10,10 @@ found / missing / new. State lives in Redis so I can switch between phone and PC
 - Docker: Dockerfile + docker-compose.yml (app + redis)
 
 ## Gotchas learned the hard way
+- BGG XML API2 requires a registered app token on every request (401 without it):
+  `Authorization: Bearer <BGG_API_TOKEN>`. Token lives in ./.env at the repo root
+  (gitignored), passed to the container by docker-compose.yml. Never commit it.
+  Check it with `docker compose exec app npm run check-bgg-token`
 - BGG login: POST https://boardgamegeek.com/login/api/v1, keep only non-expired
   Set-Cookie values, then call /xmlapi2/collection with showprivate=1&own=1
 - The private location field is `inventorylocation` in the XML (privateinfo attrs),

@@ -29,8 +29,22 @@ async function getBGGCookie(username, password) {
   return validCookies.join('; ');
 }
 
-// Fetch the collection from BGG XML API, retrying if BGG returns 202 (still queuing)
-async function fetchWithRetry(url, headers, maxAttempts = 5, delayMs = 3000) {
+// Headers for every XML API request. BGG requires a registered application
+// token (sent as a Bearer token) on all XML API2 calls.
+export function bggApiHeaders(extra = {}) {
+  const token = process.env.BGG_API_TOKEN;
+  if (!token) {
+    throw new Error('BGG_API_TOKEN is not set on the server (see CLAUDE.md)');
+  }
+  return {
+    'Authorization': `Bearer ${token}`,
+    'User-Agent': 'bgaudit/1.0 (personal shelf audit tool)',
+    ...extra
+  };
+}
+
+// Fetch from the BGG XML API, retrying on 202 (request queued) and 429 (rate limited)
+export async function fetchWithRetry(url, headers, maxAttempts = 8, delayMs = 3000) {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const response = await fetch(url, { headers });
 
@@ -38,11 +52,16 @@ async function fetchWithRetry(url, headers, maxAttempts = 5, delayMs = 3000) {
       return await response.text();
     }
 
-    if (response.status === 202) {
-      // BGG queues large requests — 202 means "try again in a moment"
-      console.log(`BGG returned 202, attempt ${attempt}/${maxAttempts} — retrying in ${delayMs}ms`);
-      await new Promise(resolve => setTimeout(resolve, delayMs));
+    if (response.status === 202 || response.status === 429) {
+      // 202: BGG is still building the collection; 429: slow down
+      const wait = response.status === 429 ? delayMs * 2 : delayMs;
+      console.log(`BGG returned ${response.status}, attempt ${attempt}/${maxAttempts}, retrying in ${wait}ms`);
+      await new Promise(resolve => setTimeout(resolve, wait));
       continue;
+    }
+
+    if (response.status === 401) {
+      throw new Error('BGG rejected the API token (401). Check BGG_API_TOKEN on the server.');
     }
 
     throw new Error(`BGG collection request failed with status ${response.status}`);
@@ -74,14 +93,13 @@ export async function fetchBGGCollection(username, password) {
     throw new Error('Username and password are required');
   }
 
+  // Fail fast on a missing token before sending the password anywhere
+  const headers = bggApiHeaders();
   const cookie = await getBGGCookie(username, password);
 
   const url = `${BGG_COLLECTION_URL}?username=${encodeURIComponent(username)}&own=1&showprivate=1`;
 
-  const xml = await fetchWithRetry(url, {
-    'Cookie': cookie,
-    'User-Agent': 'bgaudit/1.0 (personal shelf audit tool)'
-  });
+  const xml = await fetchWithRetry(url, { ...headers, 'Cookie': cookie });
 
   return await parseCollection(xml);
 }
